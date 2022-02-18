@@ -45,6 +45,16 @@ type Database struct {
 
 var DatabaseSetting = &Database{}
 
+type Redis struct {
+	Host        string
+	Password    string
+	MaxIdle     int
+	MaxActive   int
+	IdelTimeout time.Duration
+}
+
+var RedisSetting = &Redis{}
+
 func Setup() {
 	Cfg, err := ini.Load("conf/app.ini")
 
@@ -74,8 +84,9 @@ func Setup() {
 	if err != nil {
 		log.Fatalf("conf/app.ini配置文件[database]中内容有误,错误信息:%v", err)
 	}
-	log.Println(AppSetting)
-	log.Println(ServerSetting)
-	log.Println(DatabaseSetting)
 
+	err = Cfg.Section("redis").MapTo(RedisSetting)
+	if err != nil {
+		log.Fatalf("conf/app.ini配置文件[redis]中内容有误,错误信息:%v", err)
+	}
 }

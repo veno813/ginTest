@@ -1,30 +1,40 @@
 package models
 
+import "github.com/jinzhu/gorm"
+
 type Article struct {
 	Model
 
 	TagID int `json:"tag_id" gorm:"index"`
 	Tag   Tag `json:"tag"`
 
-	Title      string `json:"title"`
-	Desc       string `json:"desc"`
-	Content    string `json:"content"`
-	CreatedBy  string `json:"created_by"`
-	ModifiedBy string `json:"modified_by"`
-	State      int    `json:"state"`
+	Title         string `json:"title"`
+	Desc          string `json:"desc"`
+	CoverImageUrl string `json:"cover_image_url"`
+	Content       string `json:"content"`
+	CreatedBy     string `json:"created_by"`
+	ModifiedBy    string `json:"modified_by"`
+	State         int    `json:"state"`
 }
 
-func ExistActicleByID(id int) bool {
+//判断是否存在，排除软删除数据
+func ExistActicleByID(id int) (bool, error) {
 	var acticle Article
-	db.Select("id").Where("id = ?", id).First(&acticle)
+	err := db.Select("id").Where("id = ? and deleted_on", id, 0).First(&acticle).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return false, nil
+	}
 
-	return acticle.ID > 0
+	return acticle.ID > 0, nil
 }
 
-func GetArticleTotal(maps interface{}) (count int) {
-	db.Model(&Article{}).Where(maps).Count(&count)
+func GetArticleTotal(maps interface{}) (int, error) {
+	var count int
+	if err := db.Model(&Article{}).Where(maps).Count(&count).Error; err != nil {
+		return 0, err
+	}
 
-	return
+	return count, nil
 }
 
 func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Article) {
@@ -33,24 +43,36 @@ func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Articl
 	return
 }
 
-func GetArticle(id int) (acticle Article) {
-	db.Where("id = ?", id).First(&acticle)
-	db.Model(&acticle).Related(&acticle.Tag)
+func GetArticle(id int) (*Article, error) {
+	var article Article
+	err := db.Where("id = ? and delete_on = ?", id, 0).First(&article).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
 
-	return
+	err = db.Model(&article).Related(&article.Tag).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return &article, nil
 }
 
-func AddArticle(data map[string]interface{}) bool {
-	db.Create(&Article{
-		TagID:     data["tag_id"].(int),
-		Title:     data["title"].(string),
-		Desc:      data["desc"].(string),
-		Content:   data["content"].(string),
-		CreatedBy: data["created_by"].(string),
-		State:     data["state"].(int),
-	})
+func AddArticle(data map[string]interface{}) error {
+	article := Article{
+		TagID:         data["tag_id"].(int),
+		Title:         data["title"].(string),
+		Desc:          data["desc"].(string),
+		Content:       data["content"].(string),
+		CoverImageUrl: data["cover_image_url"].(string),
+		CreatedBy:     data["created_by"].(string),
+		State:         data["state"].(int),
+	}
 
-	return true
+	if err := db.Create(&article).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func DeleteArticle(id int) bool {

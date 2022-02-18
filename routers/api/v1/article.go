@@ -2,6 +2,7 @@ package v1
 
 import (
 	"ginTest/models"
+	"ginTest/pkg/app"
 	"ginTest/pkg/e"
 	"ginTest/pkg/logging"
 	"ginTest/pkg/setting"
@@ -19,31 +20,20 @@ import (
 // @Success 200 {string} string "{"code":200,"data":{},"msg":"ok"}"
 // @Router /api/v1/articles/{id} [get]
 func GetArticle(c *gin.Context) {
+	appG := app.Gin{c}
 	id := com.StrTo(c.Param("id")).MustInt()
 
 	valid := validation.Validation{}
 	valid.Min(id, 1, "id").Message("ID必须大于0")
 
-	code := e.INVALID_PARAMS
-	var data interface{}
-	if !valid.HasErrors() {
-		if models.ExistActicleByID(id) {
-			data = models.GetArticle(id)
-			code = e.SUCCESS
-		} else {
-			code = e.ERROR_NOT_EXIST_ARTICLE
-		}
-	} else {
-		for _, err := range valid.Errors {
-			logging.Info(err.Key, err.Message)
-		}
+	if valid.HasErrors() {
+		app.MarkErrors(valid.Errors)
+		appG.Response(http.StatusOK, e.INVALID_PARAMS, nil)
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": code,
-		"msg":  e.GetMsg(code),
-		"data": data,
-	})
+	//	artileService :=
+
 }
 
 // @Summary 获取全部文章
@@ -96,6 +86,7 @@ func AddArticle(c *gin.Context) {
 	tagId := com.StrTo(c.Query("tag_id")).MustInt()
 	title := c.Query("title")
 	desc := c.Query("desc")
+	coverImageUrl := c.Query("cover_image_url")
 	content := c.Query("content")
 	createdBy := c.Query("created_by")
 	state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
@@ -115,6 +106,7 @@ func AddArticle(c *gin.Context) {
 			data["tag_id"] = tagId
 			data["title"] = title
 			data["desc"] = desc
+			data["cover_image_url"] = coverImageUrl
 			data["content"] = content
 			data["created_by"] = createdBy
 			data["state"] = state
@@ -146,6 +138,7 @@ func EditArticle(c *gin.Context) {
 	tagId := com.StrTo(c.Query("tag_id")).MustInt()
 	title := c.Query("title")
 	desc := c.Query("desc")
+	coverImageUrl := c.Query("cover_image_url")
 	content := c.Query("content")
 	modifiedBy := c.Query("modified_by")
 
@@ -179,7 +172,7 @@ func EditArticle(c *gin.Context) {
 				if content != "" {
 					data["content"] = content
 				}
-
+				data["cover_image_url"] = coverImageUrl
 				data["modified_by"] = modifiedBy
 
 				models.EditArticle(id, data)
