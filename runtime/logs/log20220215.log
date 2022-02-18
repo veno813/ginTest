@@ -1,0 +1,21 @@
+[INFO][main.go:16]2022/02/15 20:16:02 [Start Server...]
+[INFO][main.go:39]2022/02/15 20:16:09 [Shutdown Server... interrupt]
+[INFO][main.go:46]2022/02/15 20:16:09 [Server Exiting]
+[INFO][main.go:16]2022/02/15 20:32:29 [Start Server...]
+[INFO][main.go:37]2022/02/15 20:34:13 [服务关闭中.... interrupt]
+[ERROR][main.go:29]2022/02/15 20:34:13 [Listen:%s
+ http: Server closed]
+[INFO][main.go:44]2022/02/15 20:34:13 [Server Exiting]
+[INFO][main.go:16]2022/02/15 20:34:18 [Start Server...]
+[INFO][main.go:37]2022/02/15 20:34:21 [服务关闭中.... interrupt]
+[INFO][main.go:44]2022/02/15 20:34:21 [Server Exiting]
+[INFO][main.go:16]2022/02/15 20:34:29 [Start Server...]
+[INFO][main.go:37]2022/02/15 20:35:50 [服务关闭中.... interrupt]
+[ERROR][main.go:29]2022/02/15 20:35:50 [Listen:%s
+ http: Server closed]
+[INFO][main.go:44]2022/02/15 20:35:50 [Server Exiting]
+[INFO][main.go:16]2022/02/15 20:37:01 [Start Server...]
+[INFO][main.go:37]2022/02/15 20:37:52 [服务关闭中.... interrupt]
+[INFO][main.go:44]2022/02/15 20:37:52 [Listen:%s
+ http: Server closed]
+[INFO][main.go:44]2022/02/15 20:37:52 [Server Exiting]
