@@ -17,7 +17,7 @@ type Article struct {
 	State         int    `json:"state"`
 }
 
-//判断是否存在，排除软删除数据
+//根据ID判断是否存在，排除软删除数据
 func ExistActicleByID(id int) (bool, error) {
 	var acticle Article
 	err := db.Select("id").Where("id = ? and deleted_on", id, 0).First(&acticle).Error
@@ -28,6 +28,7 @@ func ExistActicleByID(id int) (bool, error) {
 	return acticle.ID > 0, nil
 }
 
+//查询Article中总数
 func GetArticleTotal(maps interface{}) (int, error) {
 	var count int
 	if err := db.Model(&Article{}).Where(maps).Count(&count).Error; err != nil {
@@ -37,12 +38,18 @@ func GetArticleTotal(maps interface{}) (int, error) {
 	return count, nil
 }
 
-func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Article) {
-	db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
+//根据分页批量说去article数据
+func GetArticles(pageNum int, pageSize int, maps interface{}) ([]*Article, error) {
+	var articles []*Article
+	err := db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
 
-	return
+	return articles, nil
 }
 
+//根据ID获取article
 func GetArticle(id int) (*Article, error) {
 	var article Article
 	err := db.Where("id = ? and delete_on = ?", id, 0).First(&article).Error
@@ -58,6 +65,7 @@ func GetArticle(id int) (*Article, error) {
 	return &article, nil
 }
 
+//新增article
 func AddArticle(data map[string]interface{}) error {
 	article := Article{
 		TagID:         data["tag_id"].(int),
@@ -75,20 +83,27 @@ func AddArticle(data map[string]interface{}) error {
 	return nil
 }
 
-func DeleteArticle(id int) bool {
-	db.Where("id = ?", id).Delete(Article{})
+func DeleteArticle(id int) error {
+	if err := db.Where("id = ?", id).Delete(Article{}).Error; err != nil {
+		return err
+	}
 
-	return true
+	return nil
 }
 
-func EditArticle(id int, data interface{}) bool {
-	db.Model(&Article{}).Where("id = ?", id).Updates(data)
+func EditArticle(id int, data interface{}) error {
 
-	return true
+	if err := db.Model(&Article{}).Where("id = ?", id).Updates(data).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func CleanAllArticle() bool {
-	db.Unscoped().Where("deleted_on != ?", 0).Delete(&Article{})
+func CleanAllArticle() error {
+	if err := db.Unscoped().Where("deleted_on != ?", 0).Delete(&Article{}).Error; err != nil {
+		return err
+	}
 
-	return true
+	return nil
 }
